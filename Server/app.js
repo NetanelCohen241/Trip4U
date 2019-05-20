@@ -8,7 +8,7 @@ app.listen(port, function () {
 });
 
 
-
+//D
 app.post('/login', function(req, res){
     DButilsAzure.execQuery("SELECT * FROM tableName")
         .then(function(result){
@@ -20,7 +20,7 @@ app.post('/login', function(req, res){
         })
 })
 
-
+//N
 app.post('/register', function(req, res){
     DButilsAzure.execQuery("SELECT * FROM tableName")
         .then(function(result){
@@ -32,6 +32,7 @@ app.post('/register', function(req, res){
         })
 })
 
+//D
 app.post('/getSecurityQuestion', function(req, res){
     DButilsAzure.execQuery("SELECT * FROM tableName")
         .then(function(result){
@@ -44,7 +45,7 @@ app.post('/getSecurityQuestion', function(req, res){
 })
 
 
-
+//N
 app.post('/restorePassword', function(req, res){
     DButilsAzure.execQuery("SELECT * FROM tableName")
         .then(function(result){
@@ -56,7 +57,7 @@ app.post('/restorePassword', function(req, res){
         })
 })
 
-
+//D
 app.get('/getAllPOI', function(req, res){
     DButilsAzure.execQuery("SELECT * FROM tableName")
         .then(function(result){
@@ -68,7 +69,7 @@ app.get('/getAllPOI', function(req, res){
         })
 })
 
-
+//N
 app.post('/getUserFavoriteFields', function(req, res){
     DButilsAzure.execQuery("SELECT * FROM tableName")
         .then(function(result){
@@ -82,7 +83,7 @@ app.post('/getUserFavoriteFields', function(req, res){
 
 
 
-
+//D
 app.post('/getUserFavoritePOI', function(req, res){
     DButilsAzure.execQuery("SELECT * FROM tableName")
         .then(function(result){
@@ -97,7 +98,7 @@ app.post('/getUserFavoritePOI', function(req, res){
 
 
 
-
+//N
 app.get('/getAllFields', function(req, res){
     DButilsAzure.execQuery("SELECT * FROM tableName")
         .then(function(result){
@@ -109,7 +110,7 @@ app.get('/getAllFields', function(req, res){
         })
 })
 
-
+//D
 app.post('/saveFavoraitePOI', function(req, res){
     DButilsAzure.execQuery("SELECT * FROM tableName")
         .then(function(result){
@@ -123,7 +124,7 @@ app.post('/saveFavoraitePOI', function(req, res){
 
 
 
-
+//N
 app.post('/getPOIbyID', function(req, res){
     DButilsAzure.execQuery("SELECT * FROM tableName")
         .then(function(result){
@@ -137,7 +138,7 @@ app.post('/getPOIbyID', function(req, res){
 
 
 
-
+//D
 app.post('/addRating', function(req, res){
     DButilsAzure.execQuery("SELECT * FROM tableName")
         .then(function(result){
@@ -152,7 +153,7 @@ app.post('/addRating', function(req, res){
 
 
 
-
+//N
 app.post('/addReview', function(req, res){
     DButilsAzure.execQuery("SELECT * FROM tableName")
         .then(function(result){
@@ -167,7 +168,7 @@ app.post('/addReview', function(req, res){
 
 
 
-
+//D
 app.post('/saveFavoraitePOIOrder', function(req, res){
     DButilsAzure.execQuery("SELECT * FROM tableName")
         .then(function(result){
