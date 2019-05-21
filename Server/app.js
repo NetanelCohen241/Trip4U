@@ -47,12 +47,14 @@ app.post('/login', function(req, res){
 
 });
 
+
+
 //N
 app.post('/register', function(req, res){
     var fields = "userName, password, firstName, lastName, country, city, email, field1, field2, questionForPassword, answer";
     var values = "";
     for (var param in req.body){
-        values+=req.body[param]+", ";
+        values+="'"+req.body[param]+"', ";
     }
     values = values.substring(0, values.length - 2);
     console.log(values)
@@ -82,6 +84,8 @@ app.post('/getUserFavoritePOI', function(req, res){
             res.send(err);
         })
 });
+
+
 
 
 //D
@@ -140,9 +144,11 @@ app.get('/getAllPOI', function(req, res){
 
 
 
+
+
 //N
 app.post('/getUserFavoriteFields', function(req, res){
-    DButilsAzure.execQuery("SELECT * FROM tableName")
+    DButilsAzure.execQuery("SELECT field1,field2 FROM users WHERE userName='"+ req.body['userName']+"'")
         .then(function(result){
             res.send(result)
         })
@@ -167,6 +173,8 @@ app.get('/getAllFields', function(req, res){
         })
 });
 
+
+
 //D
 app.post('/saveFavoraitePOI', function(req, res){
     DButilsAzure.execQuery("SELECT * FROM tableName")
@@ -183,7 +191,7 @@ app.post('/saveFavoraitePOI', function(req, res){
 
 //N
 app.post('/getPOIbyID', function(req, res){
-    DButilsAzure.execQuery("SELECT * FROM tableName")
+    DButilsAzure.execQuery("SELECT * FROM pointsOfInterest WHERE poiId="+ req.body['poiId'])
         .then(function(result){
             res.send(result)
         })
@@ -212,15 +220,46 @@ app.post('/addRating', function(req, res){
 
 //N
 app.post('/addReview', function(req, res){
-    DButilsAzure.execQuery("SELECT * FROM tableName")
+
+    var fields = "userName,poiId,review,rank";
+    var values = "";
+    for (var param in req.body){
+        values+="'"+req.body[param]+"', ";
+    }
+    values += "null";
+    var sql = "SELECT * FROM usersReviewOnPOI WHERE userName='"+req.body['userName']+"' and poiId="+req.body['poiId']+";"
+    DButilsAzure.execQuery(sql)
         .then(function(result){
-            res.send(result)
+            if(result.length === 0){
+                sql = "INSERT INTO usersReviewOnPOI ("+fields+") VALUES ("+values+");"
+                DButilsAzure.execQuery(sql)
+                    .then(function (result) {
+                        res.send({response: "success"})
+                    })
+                    .catch(function(err){
+                        console.log(err);
+                        res.send(err)
+                    })
+            }
+            else{
+                sql = "UPDATE usersReviewOnPOI SET review ='"+req.body['review']+
+                      "' WHERE userName='"+req.body['userName']+"' and poiId="+req.body['poiId']+";"
+                DButilsAzure.execQuery(sql)
+                    .then(function (result) {
+                        res.send({response: "success"})
+                    })
+                    .catch(function(err){
+                        console.log(err);
+                        res.send(err)
+                    })
+            }
         })
         .catch(function(err){
             console.log(err);
             res.send(err)
         })
 });
+
 
 
 
