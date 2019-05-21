@@ -200,10 +200,14 @@ async function saveFavoritePOI(userName,records) {
 }
 //D
 app.post('/saveFavoraitePOI', function(req, res){
-            saveFavoritePOI(req.body.userName, req.body.favorite);
-            res.status(201).send("OK");
-
-
+    DButilsAzure.execQuery("SELECT * FROM tableName")
+        .then(function(result){
+            res.send(result)
+        })
+        .catch(function(err){
+            console.log(err);
+            res.send(err)
+        })
 });
 
 
@@ -306,22 +310,32 @@ app.post('/addReview', function(req, res){
 });
 
 
-//
-//
-// //D
-// app.post('/saveFavoraitePOIOrder', function(req, res){
-//     DButilsAzure.execQuery("SELECT * FROM tableName")
-//         .then(function(result){
-//             res.send(result)
-//         })
-//         .catch(function(err){
-//             console.log(err);
-//             res.send(err)
-//         })
-// });
-//
-//
-//
+
+
+//D
+app.get('/getPopularPOIbyRating', function(req, res){
+    var sql = "SELECT * FROM pointsOfInterest WHERE rank>="+req.body['rank'];
+    DButilsAzure.execQuery(sql)
+        .then(function(result){
+            var ans = []
+            var numOfRecords = result.length;
+            for (var i = 0; i < req.body['amount']; i++) {
+                var rnd = Math.floor(Math.random() * numOfRecords);
+                if(ans.includes(result[rnd]))
+                    i--;
+                else
+                    ans.push(result[rnd])
+            }
+            res.send(ans)
+        })
+        .catch(function(err){
+            console.log(err);
+            res.send(err)
+        })
+});
+
+
+
 
 
 
