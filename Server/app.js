@@ -200,14 +200,10 @@ async function saveFavoritePOI(userName,records) {
 }
 //D
 app.post('/saveFavoraitePOI', function(req, res){
-    DButilsAzure.execQuery("SELECT * FROM tableName")
-        .then(function(result){
-            res.send(result)
-        })
-        .catch(function(err){
-            console.log(err);
-            res.send(err)
-        })
+    saveFavoritePOI(req.body.userName, req.body.favorite);
+    res.status(201).send("OK");
+
+
 });
 
 
