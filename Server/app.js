@@ -304,6 +304,29 @@ app.post('/saveFavoraitePOIOrder', function(req, res){
 });
 
 
+//D
+app.get('/getPopularPOIbyRating', function(req, res){
+    var sql = "SELECT * FROM pointsOfInterest WHERE rank>="+req.body['rank'];
+    DButilsAzure.execQuery(sql)
+        .then(function(result){
+            var ans = []
+            var numOfRecords = result.length;
+            for (var i = 0; i < req.body['amount']; i++) {
+                var rnd = Math.floor(Math.random() * numOfRecords);
+                if(ans.includes(result[rnd]))
+                    i--;
+                else
+                    ans.push(result[rnd])
+            }
+            res.send(ans)
+        })
+        .catch(function(err){
+            console.log(err);
+            res.send(err)
+        })
+});
+
+
 
 
 
