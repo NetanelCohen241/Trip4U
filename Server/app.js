@@ -1,15 +1,21 @@
 var express = require('express');
 var app = express();
 var DButilsAzure = require('./DButils');
+const jwt = require("jsonwebtoken");
 
+
+var secret = "mySecret"
 var port = 3000;
 app.listen(port, function () {
-    console.log('Example app listening on port ' + port);
+    console.log('Server  listening on port :  ' + port);
 });
 
+var bodyParser = require('body-parser');
+app.use(bodyParser.json()); // support json encoded bodies
+app.use(bodyParser.urlencoded({ extended: true })); // support encoded bodie
 
-//D
-app.post('/login', function(req, res){
+
+app.use('/login', function(req, res ,next){
     DButilsAzure.execQuery("SELECT * FROM users")
         .then(function(result){
             var users = result;
@@ -17,19 +23,29 @@ app.post('/login', function(req, res){
             for (const user of users) {
                 if(user["userName"] === userRequestData["userName"] ){
                     if(user["password"] === userRequestData["password"] ){
-                        res.send("OK");
+                        next();
                         return;
                     }
                 }
             }
-
-            res.send("NOT FOUND")
+                res.send({response:"incorrect userName or password"})
         })
         .catch(function(err){
-            console.log(err);
+            console.log(err)
+            // console.log("hellooo")
+
             res.send(err)
         })
-})
+});
+
+app.post('/login', function(req, res){
+
+            let payload = {userName: req.body.userName };
+            let options = {expiresIn: "1d"};
+            const token = jwt.sign(payload,secret, options);
+            res.send(token);
+
+});
 
 //N
 app.post('/register', function(req, res){
@@ -49,7 +65,23 @@ app.post('/register', function(req, res){
             console.log(err)
             res.send(err)
         })
-})
+});
+
+
+//D
+app.post('/getUserFavoritePOI', function(req, res){
+    var userName = req.body.userName;
+    DButilsAzure.execQuery( "SELECT poiId " +
+                                 "FROM usersFavoritePOI " +
+                                 "WHERE userName = '"+userName+"'")
+   .then(function(result){
+        res.send(result);
+    })
+        .catch(function(err){
+            console.log(err);
+            res.send(err);
+        })
+});
 
 
 //D
@@ -70,10 +102,9 @@ app.post('/getSecurityQuestion', function(req, res){
         })
         .catch(function(err){
             console.log(err);
-            res.send(err)
+            res.send(err);
         })
 });
-
 
 //N
 app.post('/restorePassword', function(req, res){
@@ -90,22 +121,24 @@ app.post('/restorePassword', function(req, res){
             }
         })
         .catch(function(err){
-            console.log(err)
+            console.log(err);
             res.send(err)
         })
-})
+});
 
 //D
 app.get('/getAllPOI', function(req, res){
-    DButilsAzure.execQuery("SELECT * FROM tableName")
+    DButilsAzure.execQuery("SELECT * FROM pointsOfInterest")
         .then(function(result){
             res.send(result)
         })
         .catch(function(err){
-            console.log(err)
+            console.log(err);
             res.send(err)
         })
-})
+});
+
+
 
 //N
 app.post('/getUserFavoriteFields', function(req, res){
@@ -114,24 +147,10 @@ app.post('/getUserFavoriteFields', function(req, res){
             res.send(result)
         })
         .catch(function(err){
-            console.log(err)
+            console.log(err);
             res.send(err)
         })
-})
-
-
-
-//D
-app.post('/getUserFavoritePOI', function(req, res){
-    DButilsAzure.execQuery("SELECT * FROM tableName")
-        .then(function(result){
-            res.send(result)
-        })
-        .catch(function(err){
-            console.log(err)
-            res.send(err)
-        })
-})
+});
 
 
 
@@ -143,10 +162,10 @@ app.get('/getAllFields', function(req, res){
             res.send(result)
         })
         .catch(function(err){
-            console.log(err)
+            console.log(err);
             res.send(err)
         })
-})
+});
 
 //D
 app.post('/saveFavoraitePOI', function(req, res){
@@ -155,10 +174,10 @@ app.post('/saveFavoraitePOI', function(req, res){
             res.send(result)
         })
         .catch(function(err){
-            console.log(err)
+            console.log(err);
             res.send(err)
         })
-})
+});
 
 
 
@@ -169,10 +188,10 @@ app.post('/getPOIbyID', function(req, res){
             res.send(result)
         })
         .catch(function(err){
-            console.log(err)
+            console.log(err);
             res.send(err)
         })
-})
+});
 
 
 
@@ -183,10 +202,10 @@ app.post('/addRating', function(req, res){
             res.send(result)
         })
         .catch(function(err){
-            console.log(err)
+            console.log(err);
             res.send(err)
         })
-})
+});
 
 
 
@@ -198,11 +217,10 @@ app.post('/addReview', function(req, res){
             res.send(result)
         })
         .catch(function(err){
-            console.log(err)
+            console.log(err);
             res.send(err)
         })
-})
-
+});
 
 
 
@@ -213,10 +231,10 @@ app.post('/saveFavoraitePOIOrder', function(req, res){
             res.send(result)
         })
         .catch(function(err){
-            console.log(err)
+            console.log(err);
             res.send(err)
         })
-})
+});
 
 
 
