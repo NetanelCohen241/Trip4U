@@ -28,13 +28,12 @@ app.use('/login', function(req, res ,next){
                     }
                 }
             }
-                res.send({response:"incorrect userName or password"})
+            //401 mean unauthorized user
+                res.status(401).send("incorrect userName or password")
         })
         .catch(function(err){
-            console.log(err)
-            // console.log("hellooo")
-
-            res.send(err)
+            console.log(err);
+            res.status(500).send(err);
         })
 });
 
@@ -43,7 +42,7 @@ app.post('/login', function(req, res){
             let payload = {userName: req.body.userName };
             let options = {expiresIn: "1d"};
             const token = jwt.sign(payload,secret, options);
-            res.send(token);
+            res.status(200).send(token);
 
 });
 
@@ -57,15 +56,15 @@ app.post('/register', function(req, res){
         values+="'"+req.body[param]+"', ";
     }
     values = values.substring(0, values.length - 2);
-    console.log(values)
-    var sql = "INSERT INTO users ("+fields+") VALUES ("+values+");"
+    console.log(values);
+    var sql = "INSERT INTO users ("+fields+") VALUES ("+values+");";
     DButilsAzure.execQuery(sql)
         .then(function(result){
-            res.send(result)
+            res.status(201).send(result)
         })
         .catch(function(err){
-            console.log(err)
-            res.send(err)
+            console.log(err);
+            res.status(500).send(err)
         })
 });
 
@@ -73,15 +72,17 @@ app.post('/register', function(req, res){
 //D
 app.post('/getUserFavoritePOI', function(req, res){
     var userName = req.body.userName;
-    DButilsAzure.execQuery( "SELECT poiId " +
-                                 "FROM usersFavoritePOI " +
-                                 "WHERE userName = '"+userName+"'")
+    DButilsAzure.execQuery( "SELECT m.poiId,poi.name,poi.field,poi.description,poi.rank,poi.views "+
+                                 "FROM (SELECT poiId "+
+                                 "FROM usersFavoritePOI "+
+                                 "WHERE userName = '"+userName+"') as m, pointsOfInterest as poi "+
+                                 "WHERE m.poiId = poi.poiId")
    .then(function(result){
-        res.send(result);
+        res.status(200).send(result);
     })
         .catch(function(err){
             console.log(err);
-            res.send(err);
+            res.status(500).send(err);
         })
 });
 
@@ -102,11 +103,12 @@ app.post('/getSecurityQuestion', function(req, res){
                 }
             }
 
-            res.send(JSON.stringify({Error: "cant find question"} ));
+            //doesn't find any content following the criteria given by the user agent.
+            res.status(406).send(JSON.stringify({Error: "cant find question"} ));
         })
         .catch(function(err){
             console.log(err);
-            res.send(err);
+            res.status(500).send(err);
         })
 });
 
@@ -119,14 +121,14 @@ app.post('/restorePassword', function(req, res){
             else {
                 var user = result[0];
                 if(user['answer'] === req.body['answer'])
-                    res.send(JSON.stringify({password: user['password']}))
+                    res.status(200).send(JSON.stringify({password: user['password']}))
                 else
-                    res.send(JSON.stringify({response: "Wrong answer"}))
+                    res.status(401).send(JSON.stringify({response: "Wrong answer"}))
             }
         })
         .catch(function(err){
             console.log(err);
-            res.send(err)
+            res.status(500).send(err)
         })
 });
 
@@ -134,11 +136,11 @@ app.post('/restorePassword', function(req, res){
 app.get('/getAllPOI', function(req, res){
     DButilsAzure.execQuery("SELECT * FROM pointsOfInterest")
         .then(function(result){
-            res.send(result)
+            res.status(200).send(result)
         })
         .catch(function(err){
             console.log(err);
-            res.send(err)
+            res.status(500).send(err)
         })
 });
 
@@ -150,11 +152,11 @@ app.get('/getAllPOI', function(req, res){
 app.post('/getUserFavoriteFields', function(req, res){
     DButilsAzure.execQuery("SELECT field1,field2 FROM users WHERE userName='"+ req.body['userName']+"'")
         .then(function(result){
-            res.send(result)
+            res.status(200).send(result)
         })
         .catch(function(err){
             console.log(err);
-            res.send(err)
+            res.status(500).send(err)
         })
 });
 
@@ -165,11 +167,11 @@ app.post('/getUserFavoriteFields', function(req, res){
 app.get('/getAllFields', function(req, res){
     DButilsAzure.execQuery("SELECT * FROM tableName")
         .then(function(result){
-            res.send(result)
+            res.status(200).send(result)
         })
         .catch(function(err){
             console.log(err);
-            res.send(err)
+            res.status(500).send(err);
         })
 });
 
@@ -193,26 +195,52 @@ app.post('/saveFavoraitePOI', function(req, res){
 app.post('/getPOIbyID', function(req, res){
     DButilsAzure.execQuery("SELECT * FROM pointsOfInterest WHERE poiId="+ req.body['poiId'])
         .then(function(result){
-            res.send(result)
+            res.status(200).send(result);
         })
         .catch(function(err){
             console.log(err);
-            res.send(err)
+            res.status(500).send(err);
         })
 });
 
 
 
 //D
+
+async function addRating(userName,poiId,rating){
+    try {
+        let qry = "SELECT *" + "FROM usersReviewOnPOI " + "WHERE userName =  '" + userName +  "' and poiId = '" + poiId + "';";
+        let numberOfRecords = await DButilsAzure.execQuery(qry);
+        numberOfRecords = numberOfRecords.length;
+        if (numberOfRecords > 0) {
+            qry = "UPDATE  usersReviewOnPOI " + "SET rank = " + rating + " " + "WHERE userName =  '" + userName + "' and poiId = '" + poiId + "';";
+            await DButilsAzure.execQuery(qry);
+        } else {
+            qry = "INSERT INTO usersReviewOnPOI (userName, poiId, review,rank) " + "VALUES ('" + userName + "'," + poiId + ", NULL ," + rating + ");";
+            await DButilsAzure.execQuery(qry);
+        }
+         qry = "SELECT AVG(cast (rank as Float)) as avg " +
+            "FROM usersReviewOnPOI " +
+            "WHERE poiId = '" + poiId + "';";
+        const tmp = await DButilsAzure.execQuery(qry);
+        let avg = tmp[0].avg;
+        qry = "UPDATE  pointsOfInterest " + "SET rank = " + avg + " " + "WHERE poiId =  '" + poiId +"';";
+        await DButilsAzure.execQuery(qry);
+    }catch (e) {
+        console.log(e);
+
+    }
+
+}
 app.post('/addRating', function(req, res){
-    DButilsAzure.execQuery("SELECT * FROM tableName")
-        .then(function(result){
-            res.send(result)
-        })
-        .catch(function(err){
-            console.log(err);
-            res.send(err)
-        })
+    let userName = req.body.userName;
+    let poiId = req.body.poiId;
+    let rating = req.body.rank;
+    addRating(userName,poiId,rating)
+        .then(res.status(201).send("Success"))
+        .catch(function (err){
+            res.status(500).send(err);
+        });
 });
 
 
@@ -234,11 +262,11 @@ app.post('/addReview', function(req, res){
                 sql = "INSERT INTO usersReviewOnPOI ("+fields+") VALUES ("+values+");"
                 DButilsAzure.execQuery(sql)
                     .then(function (result) {
-                        res.send({response: "success"})
+                        res.status(200).send("success")
                     })
                     .catch(function(err){
                         console.log(err);
-                        res.send(err)
+                        res.status(500).send(err);
                     })
             }
             else{
@@ -246,17 +274,17 @@ app.post('/addReview', function(req, res){
                       "' WHERE userName='"+req.body['userName']+"' and poiId="+req.body['poiId']+";"
                 DButilsAzure.execQuery(sql)
                     .then(function (result) {
-                        res.send({response: "success"})
+                        res.status(200).send("success")
                     })
                     .catch(function(err){
                         console.log(err);
-                        res.send(err)
+                        res.status(500).send(err)
                     })
             }
         })
         .catch(function(err){
             console.log(err);
-            res.send(err)
+            res.status(500).send(err);
         })
 });
 
