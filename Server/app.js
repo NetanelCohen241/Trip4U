@@ -1,29 +1,16 @@
 var express = require('express');
 var app = express();
 var DButilsAzure = require('./DButils');
-const jwt = require("jsonwebtoken");
+var authManager = require('./AuthManager');
 
 
-var secret = "NetaDaniSuperSecretSHHHHHHHHHH!!!!";
 var port = 3000;
 app.listen(port, function () {
     console.log('Server  listening on port :  ' + port);
 });
 
 
-validate = function(req, res, next){
-    const token = req.header("x-auth-token");
-    // no token
-    if (!token) res.status(401).send("Access denied. No token provided.");
-    // verify token
-    try {
-        const decoded = jwt.verify(token, secret);
-        req.decoded = decoded;
-        next();
-    } catch (exception) {
-        res.status(400).send("Invalid token.");
-    }
-};
+
 
 
 var bodyParser = require('body-parser');
@@ -41,11 +28,11 @@ app.use((req, res, next) => {
 app.use(bodyParser.urlencoded({ extended: true })); // support encoded bodie
 
 
-app.use('/getUserFavoriteFields', validate);
-app.use('KgetUserFavoritePOI', validate);
-app.use('/SaveFavoritePOI', validate);
-app.use('/AddRating', validate);
-app.use('/AddReview', validate);
+app.use('/getUserFavoriteFields', authManager.validate);
+app.use('/getUserFavoritePOI', authManager.validate);
+app.use('/SaveFavoritePOI', authManager.validate);
+app.use('/AddRating', authManager.validate);
+app.use('/AddReview', authManager.validate);
 
 
 //CHECK!
@@ -75,7 +62,7 @@ app.post('/login', function(req, res){
 
             let payload = {userName: req.body.userName };
             let options = {expiresIn: "1d"};
-            const token = jwt.sign(payload,secret, options);
+            const token = authManager.generateToken(payload,secret, options);
             res.status(200).send(token);
 
 });
