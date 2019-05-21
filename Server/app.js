@@ -4,15 +4,40 @@ var DButilsAzure = require('./DButils');
 const jwt = require("jsonwebtoken");
 
 
-var secret = "mySecret"
+var secret = "NetaDaniSuperSecretSHHHHHHHHHH!!!!";
 var port = 3000;
 app.listen(port, function () {
     console.log('Server  listening on port :  ' + port);
 });
 
+
+validate = function(req, res, next){
+    const token = req.header("x-auth-token");
+    // no token
+    if (!token) res.status(401).send("Access denied. No token provided.");
+    // verify token
+    try {
+        const decoded = jwt.verify(token, secret);
+        req.decoded = decoded;
+        next();
+    } catch (exception) {
+        res.status(400).send("Invalid token.");
+    }
+};
+
+
 var bodyParser = require('body-parser');
 app.use(bodyParser.json()); // support json encoded bodies
 app.use(bodyParser.urlencoded({ extended: true })); // support encoded bodie
+
+
+app.use('/getUserFavoriteFields', validate);
+app.use('KgetUserFavoritePOI', validate);
+app.use('/SaveFavoritePOI', validate);
+app.use('/AddRating', validate);
+app.use('/AddReview', validate);
+
+
 
 
 app.use('/login', function(req, res ,next){
@@ -205,6 +230,19 @@ app.post('/getPOIbyID', function(req, res){
 
 
 
+
+app.post('/incrementPOIViewsNumber', function(req, res){
+    var sql = "UPDATE pointsOfInterest SET views = views +1 WHERE poiId = "+req.body['poiId'];
+    DButilsAzure.execQuery(sql)
+        .then(function(result){
+            res.status(200).send(result);
+        })
+        .catch(function(err){
+            console.log(err);
+            res.status(500).send(err);
+        })
+});
+
 //D
 
 async function addRating(userName,poiId,rating){
@@ -226,21 +264,29 @@ async function addRating(userName,poiId,rating){
         let avg = tmp[0].avg;
         qry = "UPDATE  pointsOfInterest " + "SET rank = " + avg + " " + "WHERE poiId =  '" + poiId +"';";
         await DButilsAzure.execQuery(qry);
-    }catch (e) {
-        console.log(e);
+        return true;
+    }catch(err) {
+        return false;
 
     }
 
 }
+
+
 app.post('/addRating', function(req, res){
     let userName = req.body.userName;
     let poiId = req.body.poiId;
     let rating = req.body.rank;
-    addRating(userName,poiId,rating)
-        .then(res.status(201).send("Success"))
-        .catch(function (err){
-            res.status(500).send(err);
-        });
+    let response = addRating(userName, poiId, rating);
+    response.then(function (response) {
+
+        if(response)
+            res.status(201).send("Success");
+        else
+            res.status(201).send("fail");
+    }).catch()
+
+
 });
 
 
@@ -288,20 +334,6 @@ app.post('/addReview', function(req, res){
         })
 });
 
-
-
-
-//D
-app.post('/saveFavoraitePOIOrder', function(req, res){
-    DButilsAzure.execQuery("SELECT * FROM tableName")
-        .then(function(result){
-            res.send(result)
-        })
-        .catch(function(err){
-            console.log(err);
-            res.send(err)
-        })
-});
 
 
 //D
