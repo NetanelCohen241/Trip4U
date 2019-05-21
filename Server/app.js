@@ -201,7 +201,28 @@ app.get('/getAllFields', function(req, res){
 });
 
 
+async function saveFavoritePOI(userName,records) {
+    try {
+        let qry = "DELETE FROM usersFavoritePOI WHERE userName = '"+userName+"';";
+        await DButilsAzure.execQuery(qry);
+        qry =
+            "INSERT INTO usersFavoritePOI ( userName , poiId, timeStamp, poiIndex )\nVALUES\n" ;
+        let  values="" ;
+        for (const record of records) {
+            values+="('"+userName+"', '"+record.poiId+"', '"+record.timeStamp+"', "+record.poiIndex+"),\n"
+        }
+        values =values.substr(0,values.length-2)+";";
+        qry += values;;
+        await DButilsAzure.execQuery(qry);
 
+
+    }catch (e) {
+        console.log(e);
+        res.status(500).send(e);
+
+    }
+
+}
 //D
 app.post('/saveFavoraitePOI', function(req, res){
     DButilsAzure.execQuery("SELECT * FROM tableName")
@@ -333,6 +354,7 @@ app.post('/addReview', function(req, res){
             res.status(500).send(err);
         })
 });
+
 
 
 
