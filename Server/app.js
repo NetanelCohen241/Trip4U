@@ -2,7 +2,7 @@ var express = require('express');
 var app = express();
 var DButilsAzure = require('./DButils');
 var authManager = require('./AuthManager');
-
+var fields = { field: ["Restaurants","Museums","Night Clubs","Shopping"]};
 
 var port = 3000;
 app.listen(port, function () {
@@ -177,14 +177,9 @@ app.post('/getUserFavoriteFields', function(req, res){
 
 //N
 app.get('/getAllFields', function(req, res){
-    DButilsAzure.execQuery("SELECT * FROM tableName")
-        .then(function(result){
-            res.status(200).send(result)
-        })
-        .catch(function(err){
-            console.log(err);
-            res.status(500).send(err);
-        })
+
+    res.status(200).send(JSON.stringify(fields))
+
 });
 
 
@@ -348,7 +343,7 @@ app.get('/getPopularPOIbyRating', function(req, res){
         .then(function(result){
             var ans = []
             var numOfRecords = result.length;
-            for (var i = 0; i < req.body['amount']; i++) {
+            for (var i = 0; i < Math.min(req.body['amount'],numOfRecords); i++) {
                 var rnd = Math.floor(Math.random() * numOfRecords);
                 if(ans.includes(result[rnd]))
                     i--;
