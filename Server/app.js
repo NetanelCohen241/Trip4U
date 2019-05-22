@@ -14,7 +14,17 @@ app.listen(port, function () {
 
 
 var bodyParser = require('body-parser');
-app.use(bodyParser.json()); // support json encoded bodies
+app.use((req, res, next) => {
+    bodyParser.json()(req, res, err => {
+        if (err) {
+            console.log(err);
+            return res.sendStatus(400); // Bad request
+        }
+
+        next();
+    });
+});
+
 app.use(bodyParser.urlencoded({ extended: true })); // support encoded bodie
 
 
@@ -25,8 +35,7 @@ app.use('/AddRating', authManager.validate);
 app.use('/AddReview', authManager.validate);
 
 
-
-
+//CHECK!
 app.use('/login', function(req, res ,next){
     DButilsAzure.execQuery("SELECT * FROM users")
         .then(function(result){
@@ -60,7 +69,7 @@ app.post('/login', function(req, res){
 
 
 
-//N
+//CHECK!
 app.post('/register', function(req, res){
     var fields = "userName, password, firstName, lastName, country, city, email, field1, field2, questionForPassword, answer";
     var values = "";
@@ -72,7 +81,7 @@ app.post('/register', function(req, res){
     var sql = "INSERT INTO users ("+fields+") VALUES ("+values+");";
     DButilsAzure.execQuery(sql)
         .then(function(result){
-            res.status(201).send(result)
+            res.status(201).send("Registration success");
         })
         .catch(function(err){
             console.log(err);
@@ -81,7 +90,7 @@ app.post('/register', function(req, res){
 });
 
 
-//D
+//CHECK!!
 app.post('/getUserFavoritePOI', function(req, res){
     var userName = req.body.userName;
     DButilsAzure.execQuery( "SELECT m.poiId,poi.name,poi.field,poi.description,poi.rank,poi.views "+
@@ -90,7 +99,11 @@ app.post('/getUserFavoritePOI', function(req, res){
                                  "WHERE userName = '"+userName+"') as m, pointsOfInterest as poi "+
                                  "WHERE m.poiId = poi.poiId")
    .then(function(result){
-        res.status(200).send(result);
+       if(result.length === 0 ){
+           res.status(200).send("User dose not exist or dont have a Favorite list");
+       }else {
+           res.status(200).send(result);
+       }
     })
         .catch(function(err){
             console.log(err);
@@ -101,7 +114,7 @@ app.post('/getUserFavoritePOI', function(req, res){
 
 
 
-//D
+//CHECK!
 app.post('/getSecurityQuestion', function(req, res){
     DButilsAzure.execQuery("SELECT * FROM users")
         .then(function(result){
@@ -109,8 +122,7 @@ app.post('/getSecurityQuestion', function(req, res){
             for (const user of result) {
                 if(user["userName"] === req.body.userName){
                     user_question = user["questionForPassword"];
-                    var ans = { "qustion": user_question};
-                    res.send(JSON.stringify(ans));
+                    res.status(200).send({ "qustion": user_question});
                     return;
                 }
             }
@@ -124,9 +136,9 @@ app.post('/getSecurityQuestion', function(req, res){
         })
 });
 
-//N
+//CHECK!
 app.post('/restorePassword', function(req, res){
-    DButilsAzure.execQuery("SELECT * FROM users WHERE userName="+req.body['userName'])
+    DButilsAzure.execQuery("SELECT * FROM users WHERE userName= '"+req.body['userName']+"'")
         .then(function(result){
             if(result.length === 0)
                 res.send(JSON.stringify({response: "user does not exists"}))
@@ -144,7 +156,7 @@ app.post('/restorePassword', function(req, res){
         })
 });
 
-//D
+//CHECK!!
 app.get('/getAllPOI', function(req, res){
     DButilsAzure.execQuery("SELECT * FROM pointsOfInterest")
         .then(function(result){
@@ -160,7 +172,7 @@ app.get('/getAllPOI', function(req, res){
 
 
 
-//N
+//CHECK!
 app.post('/getUserFavoriteFields', function(req, res){
     DButilsAzure.execQuery("SELECT field1,field2 FROM users WHERE userName='"+ req.body['userName']+"'")
         .then(function(result){
@@ -205,7 +217,7 @@ async function saveFavoritePOI(userName,records) {
     }
 
 }
-//D
+//CHECK with
 app.post('/saveFavoraitePOI', function(req, res){
     saveFavoritePOI(req.body.userName, req.body.favorite);
     res.status(201).send("OK");
@@ -215,9 +227,9 @@ app.post('/saveFavoraitePOI', function(req, res){
 
 
 
-//N
+//CHECK!
 app.post('/getPOIbyID', function(req, res){
-    DButilsAzure.execQuery("SELECT * FROM pointsOfInterest WHERE poiId="+ req.body['poiId'])
+    DButilsAzure.execQuery("SELECT * FROM pointsOfInterest WHERE poiId='"+ req.body['poiId']+"'")
         .then(function(result){
             res.status(200).send(result);
         })
@@ -229,7 +241,7 @@ app.post('/getPOIbyID', function(req, res){
 
 
 
-
+//CHECK!
 app.post('/incrementPOIViewsNumber', function(req, res){
     var sql = "UPDATE pointsOfInterest SET views = views +1 WHERE poiId = "+req.body['poiId'];
     DButilsAzure.execQuery(sql)
@@ -242,7 +254,7 @@ app.post('/incrementPOIViewsNumber', function(req, res){
         })
 });
 
-//D
+//CHECK!
 
 async function addRating(userName,poiId,rating){
     try {
@@ -291,7 +303,7 @@ app.post('/addRating', function(req, res){
 
 
 
-//N
+//CHECK!
 app.post('/addReview', function(req, res){
 
     var fields = "userName,poiId,review,rank";
@@ -336,7 +348,7 @@ app.post('/addReview', function(req, res){
 
 
 
-//D
+//CHECK!
 app.get('/getPopularPOIbyRating', function(req, res){
     var sql = "SELECT * FROM pointsOfInterest WHERE rank>="+req.body['rank'];
     DButilsAzure.execQuery(sql)
