@@ -2,6 +2,7 @@ var express = require('express');
 var app = express();
 var DButilsAzure = require('./DButils');
 var authManager = require('./AuthManager');
+var fields = { field: ["Restaurants","Museums","Night Clubs","Shopping"]};
 fs = require('fs');
 
 var port = 3000;
@@ -130,6 +131,7 @@ app.post('/register', function(req, res){
         })
 });
 
+
 //CHECK!!
 app.post('/getUserFavoritePOI', function(req, res){
     var userName = req.body.userName;
@@ -229,14 +231,9 @@ app.post('/getUserFavoriteFields', function(req, res){
 
 //N
 app.get('/getAllFields', function(req, res){
-    DButilsAzure.execQuery("SELECT * FROM tableName")
-        .then(function(result){
-            res.status(200).send(result)
-        })
-        .catch(function(err){
-            console.log(err);
-            res.status(500).send(err);
-        })
+
+    res.status(200).send(JSON.stringify(fields))
+
 });
 
 
