@@ -33,6 +33,7 @@ app.use('/getUserFavoritePOI', authManager.validate);
 app.use('/SaveFavoritePOI', authManager.validate);
 app.use('/AddRating', authManager.validate);
 app.use('/AddReview', authManager.validate);
+app.use('/getUserSecurityQuestions', authManager.validate);
 
 
 //CHECK!
@@ -62,7 +63,7 @@ app.post('/login', function(req, res){
 
             let payload = {userName: req.body.userName };
             let options = {expiresIn: "1d"};
-            const token = authManager.generateToken(payload,secret, options);
+            const token = authManager.generateToken(payload, options);
             res.status(200).send(token);
 
 });
@@ -115,20 +116,10 @@ app.post('/getUserFavoritePOI', function(req, res){
 
 
 //CHECK!
-app.post('/getSecurityQuestion', function(req, res){
-    DButilsAzure.execQuery("SELECT * FROM users")
+app.get('/getSecurityQuestions', function(req, res){
+    DButilsAzure.execQuery("SELECT * FROM securityQuestions")
         .then(function(result){
-            var user_question = "";
-            for (const user of result) {
-                if(user["userName"] === req.body.userName){
-                    user_question = user["questionForPassword"];
-                    res.status(200).send({ "qustion": user_question});
-                    return;
-                }
-            }
-
-            //doesn't find any content following the criteria given by the user agent.
-            res.status(406).send(JSON.stringify({Error: "cant find question"} ));
+            res.status(200).send(result);
         })
         .catch(function(err){
             console.log(err);
@@ -136,16 +127,50 @@ app.post('/getSecurityQuestion', function(req, res){
         })
 });
 
-//CHECK!
-app.post('/restorePassword', function(req, res){
-    DButilsAzure.execQuery("SELECT * FROM users WHERE userName= '"+req.body['userName']+"'")
+
+app.post('/getUserSecurityQuestions', function(req, res){
+    DButilsAzure.execQuery("SELECT * FROM usersSecurityQuestions WHERE userName= '"+req.body['userName']+"'")
         .then(function(result){
             if(result.length === 0)
-                res.send(JSON.stringify({response: "user does not exists"}))
+                res.send(JSON.stringify({response: "user does not exists"}));
+            else {
+                // var firstQuestion = "", secondQuestion = "";
+                // var numOfRecords = result.length;
+                // var index = Math.floor(Math.random() * numOfRecords);
+                // firstQuestion = result[index]["question"];
+                // result.remove(index);
+                // secondQuestion = Math.floor(Math.random() * (numOfRecords - 1));
+                res.status(200).send(result);
+            }
+        })
+        .catch(function(err){
+            console.log(err);
+            res.status(500).send(err);
+        })
+});
+
+
+
+//CHECK!
+app.post('/restorePassword', function(req, res){
+    var sql = "SELECT * FROM usersSecurityQuestions WHERE userName= '"+req.body['userName']+
+        "' and questionId= "+req.body["questionId"];
+    DButilsAzure.execQuery(sql)
+        .then(function(result){
+            if(result.length === 0)
+                res.send(JSON.stringify({response: "user does not exists"}));
             else {
                 var user = result[0];
-                if(user['answer'] === req.body['answer'])
-                    res.status(200).send(JSON.stringify({password: user['password']}))
+                if(user['answer'] === req.body['answer']){
+                    DButilsAzure.execQuery("SELECT * FROM users WHERE userName= '"+req.body['userName']+"'")
+                        .then(function (result) {
+                            res.status(200).send({password: result[0]['password']});
+                        })
+                        .catch(function(err){
+                            console.log(err);
+                            res.status(500).send(err)
+                        })
+                }
                 else
                     res.status(401).send(JSON.stringify({response: "Wrong answer"}))
             }
@@ -155,6 +180,8 @@ app.post('/restorePassword', function(req, res){
             res.status(500).send(err)
         })
 });
+
+
 
 //CHECK!!
 app.get('/getAllPOI', function(req, res){

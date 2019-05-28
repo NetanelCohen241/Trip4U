@@ -4,7 +4,7 @@ const jwt = require("jsonwebtoken");
 var secret = "NetaDaniSuperSecretSHHHHHHHHHH!!!!";
 
 
-exports.generateToken = function(payload,secret, options){
+exports.generateToken = function(payload, options){
 
     return jwt.sign(payload,secret, options)
 };
@@ -17,6 +17,7 @@ exports.validate = function(req, res, next){
     try {
         const decoded = jwt.verify(token, secret);
         req.decoded = decoded;
+        req.body['userName'] = decoded['use rName'];
         next();
     } catch (exception) {
         res.status(400).send("Invalid token.");
