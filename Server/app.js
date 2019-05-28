@@ -3,6 +3,7 @@ var app = express();
 var DButilsAzure = require('./DButils');
 var authManager = require('./AuthManager');
 var fields = { field: ["Restaurants","Museums","Night Clubs","Shopping"]};
+fs = require('fs');
 
 var port = 3000;
 app.listen(port, function () {
@@ -70,24 +71,89 @@ app.post('/login', function(req, res){
 
 
 
+app.use('/register',function(req,res,next){
+
+    var parser = require('xml2json');
+
+        fs.readFile('./countries.xml', function (err, data) {
+            var json = parser.toJson(data);
+            var citesJson = JSON.parse(json)["Countries"]["Country"];
+            var cites = [];
+            for (const city of citesJson) {
+                cites.push(city["Name"]);
+            }
+
+            var emailReg = /^([\w-\.]+@([\w-]+\.)+[\w-]{2,4})?$/;
+            var userNameReg = /^[a-zA-Z]*$/;
+            var passReg =   /^(?=.*[0-9])(?=.*[a-zA-Z])([a-zA-Z0-9]+)$/;
+            var userName =req.body.userName;
+            var password =req.body.password;
+            var email =req.body.email;
+            var userNameLen =  3 <= userName.length <= 8 ;
+            var passwordLen= 5 <= password.length <= 10 ;
+            //check username input
+            if(!userNameReg.test(userName) || !userName ){
+                res.send("Error in user name");
+                return;
+            }
+
+            //check password
+            if(!passReg.test(password || !password) ){
+                res.send('Please enter 5-10 characters and at least one number and one letter in your password');
+                return;
+            }
+
+            if( !cites.includes(req.body.country) ){
+                res.send('country '+ req.body.country+' dose not exist');
+                return;
+            }
+            next();
+        });
+
+});
+
 //CHECK!
 app.post('/register', function(req, res){
-    var fields = "userName, password, firstName, lastName, country, city, email, field1, field2, questionForPassword, answer";
+    var fields = "userName, password, firstName, lastName, country, city, email, field1, field2";
     var values = "";
+    var count =0;
     for (var param in req.body){
         values+="'"+req.body[param]+"', ";
+        count++
+        if(count === 9 ){
+            break;
+        }
     }
     values = values.substring(0, values.length - 2);
     console.log(values);
     var sql = "INSERT INTO users ("+fields+") VALUES ("+values+");";
     DButilsAzure.execQuery(sql)
         .then(function(result){
-            res.status(201).send("Registration success");
+            var flds = "userName,questionId, answer";
+            var val  ="";
+            var qry =
+                "INSERT INTO usersSecurityQuestions ("+flds+")\nVALUES\n" ;
+            var qustionList = req.body.qustions;
+            for (const record of qustionList) {
+                val+="('"+req.body.userName+"', '"+record.qustionId+"', '"+record.answer+"'),\n"
+            }
+            val =val.substr(0,val.length-2)+";";
+            qry += val;
+            DButilsAzure.execQuery(qry)
+                .then(function(result){
+                    res.status(201).send("Registration success");
+                })
+                .catch(function(err){
+                    console.log(err);
+                    res.status(500).send(err)
+                })
         })
         .catch(function(err){
             console.log(err);
-            res.status(500).send(err)
-        })
+            //res.status(500).send(err)
+        });
+
+
 });
 
 
