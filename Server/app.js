@@ -115,20 +115,44 @@ app.use('/register',function(req,res,next){
 app.post('/register', function(req, res){
     var fields = "userName, password, firstName, lastName, country, city, email, field1, field2";
     var values = "";
+    var count =0;
     for (var param in req.body){
         values+="'"+req.body[param]+"', ";
+        count++
+        if(count === 9 ){
+            break;
+        }
     }
     values = values.substring(0, values.length - 2);
     console.log(values);
     var sql = "INSERT INTO users ("+fields+") VALUES ("+values+");";
     DButilsAzure.execQuery(sql)
         .then(function(result){
-            res.status(201).send("Registration success");
+            var flds = "userName,questionId, answer";
+            var val  ="";
+            var qry =
+                "INSERT INTO usersSecurityQuestions ("+flds+")\nVALUES\n" ;
+            var qustionList = req.body.qustions;
+            for (const record of qustionList) {
+                val+="('"+req.body.userName+"', '"+record.qustionId+"', '"+record.answer+"'),\n"
+            }
+            val =val.substr(0,val.length-2)+";";
+            qry += val;
+            DButilsAzure.execQuery(qry)
+                .then(function(result){
+                    res.status(201).send("Registration success");
+                })
+                .catch(function(err){
+                    console.log(err);
+                    res.status(500).send(err)
+                })
         })
         .catch(function(err){
             console.log(err);
-            res.status(500).send(err)
-        })
+            //res.status(500).send(err)
+        });
+
+
 });
 
 
