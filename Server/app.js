@@ -2,7 +2,7 @@ var express = require('express');
 var app = express();
 var DButilsAzure = require('./DButils');
 var authManager = require('./AuthManager');
-
+fs = require('fs');
 
 var port = 3000;
 app.listen(port, function () {
@@ -69,9 +69,50 @@ app.post('/login', function(req, res){
 
 
 
+app.use('/register',function(req,res,next){
+
+    var parser = require('xml2json');
+
+        fs.readFile('./countries.xml', function (err, data) {
+            var json = parser.toJson(data);
+            var citesJson = JSON.parse(json)["Countries"]["Country"];
+            var cites = [];
+            for (const city of citesJson) {
+                cites.push(city["Name"]);
+            }
+
+            var emailReg = /^([\w-\.]+@([\w-]+\.)+[\w-]{2,4})?$/;
+            var userNameReg = /^[a-zA-Z]*$/;
+            var passReg =   /^(?=.*[0-9])(?=.*[a-zA-Z])([a-zA-Z0-9]+)$/;
+            var userName =req.body.userName;
+            var password =req.body.password;
+            var email =req.body.email;
+            var userNameLen =  3 <= userName.length <= 8 ;
+            var passwordLen= 5 <= password.length <= 10 ;
+            //check username input
+            if(!userNameReg.test(userName) || !userName ){
+                res.send("Error in user name");
+                return;
+            }
+
+            //check password
+            if(!passReg.test(password || !password) ){
+                res.send('Please enter 5-10 characters and at least one number and one letter in your password');
+                return;
+            }
+
+            if( !cites.includes(req.body.country) ){
+                res.send('country '+ req.body.country+' dose not exist');
+                return;
+            }
+            next();
+        });
+
+});
+
 //CHECK!
 app.post('/register', function(req, res){
-    var fields = "userName, password, firstName, lastName, country, city, email, field1, field2, questionForPassword, answer";
+    var fields = "userName, password, firstName, lastName, country, city, email, field1, field2";
     var values = "";
     for (var param in req.body){
         values+="'"+req.body[param]+"', ";
@@ -88,7 +129,6 @@ app.post('/register', function(req, res){
             res.status(500).send(err)
         })
 });
-
 
 //CHECK!!
 app.post('/getUserFavoritePOI', function(req, res){
