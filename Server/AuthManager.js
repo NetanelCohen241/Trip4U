@@ -17,7 +17,7 @@ exports.validate = function(req, res, next){
     try {
         const decoded = jwt.verify(token, secret);
         req.decoded = decoded;
-        req.body['userName'] = decoded['use rName'];
+        req.body['userName'] = decoded['userName'];
         next();
     } catch (exception) {
         res.status(400).send("Invalid token.");

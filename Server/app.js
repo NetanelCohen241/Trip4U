@@ -31,9 +31,9 @@ app.use(bodyParser.urlencoded({ extended: true })); // support encoded bodie
 
 app.use('/getUserFavoriteFields', authManager.validate);
 app.use('/getUserFavoritePOI', authManager.validate);
-app.use('/SaveFavoritePOI', authManager.validate);
-app.use('/AddRating', authManager.validate);
-app.use('/AddReview', authManager.validate);
+app.use('/saveFavoritePOI', authManager.validate);
+app.use('/addRating', authManager.validate);
+app.use('/addReview', authManager.validate);
 app.use('/getUserSecurityQuestions', authManager.validate);
 
 
@@ -311,7 +311,7 @@ async function saveFavoritePOI(userName,records) {
 
 }
 //CHECK with
-app.post('/saveFavoraitePOI', function(req, res){
+app.post('/saveFavoritePOI', function(req, res){
     saveFavoritePOI(req.body.userName, req.body.favorite);
     res.status(201).send("OK");
 
@@ -326,6 +326,7 @@ app.post('/getPOIbyID', function(req, res){
         .then(function(result){
             res.status(200).send(result);
         })
+        .catch(function(err){
         .catch(function(err){
             console.log(err);
             res.status(500).send(err);
