@@ -1,10 +1,12 @@
 var express = require('express');
 var app = express();
+var cors = require('cors');
 var DButilsAzure = require('./DButils');
 var authManager = require('./AuthManager');
-var fields = { field: ["Restaurants","Museums","Night Clubs","Shopping"]};
+var fields = { field: ["diners","Museums","Clubs","Shopping"]};
 fs = require('fs');
 
+app.use(cors());
 var port = 3000;
 app.listen(port, function () {
     console.log('Server  listening on port :  ' + port);
@@ -119,7 +121,7 @@ app.post('/register', function(req, res){
     var count =0;
     for (var param in req.body){
         values+="'"+req.body[param]+"', ";
-        count++
+        count++;
         if(count === 9 ){
             break;
         }
@@ -326,7 +328,6 @@ app.post('/getPOIbyID', function(req, res){
         .then(function(result){
             res.status(200).send(result);
         })
-        .catch(function(err){
         .catch(function(err){
             console.log(err);
             res.status(500).send(err);
