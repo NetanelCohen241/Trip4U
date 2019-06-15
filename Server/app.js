@@ -36,7 +36,7 @@ app.use('/getUserFavoritePOI', authManager.validate);
 app.use('/saveFavoritePOI', authManager.validate);
 app.use('/addRating', authManager.validate);
 app.use('/addReview', authManager.validate);
-app.use('/getUserSecurityQuestions', authManager.validate);
+//app.use('/getUserSecurityQuestions', authManager.validate);
 
 
 //CHECK!
@@ -162,7 +162,7 @@ app.post('/register', function(req, res){
 //CHECK!!
 app.post('/getUserFavoritePOI', function(req, res){
     var userName = req.body.userName;
-    DButilsAzure.execQuery( "SELECT m.poiId,poi.name,poi.field,poi.description,poi.rank,poi.views "+
+    DButilsAzure.execQuery( "SELECT m.poiId,poi.name,poi.field,poi.description,poi.rank,poi.views,poi.imageUrl "+
                                  "FROM (SELECT poiId "+
                                  "FROM usersFavoritePOI "+
                                  "WHERE userName = '"+userName+"') as m, pointsOfInterest as poi "+
@@ -197,7 +197,9 @@ app.get('/getSecurityQuestions', function(req, res){
 
 
 app.post('/getUserSecurityQuestions', function(req, res){
-    DButilsAzure.execQuery("SELECT * FROM usersSecurityQuestions WHERE userName= '"+req.body['userName']+"'")
+    DButilsAzure.execQuery("SELECT * FROM usersSecurityQuestions left join securityQuestions" +
+                                    " on usersSecurityQuestions.questionId = securityQuestions.questionId " +
+                                    "WHERE userName= '"+req.body['userName']+"'")
         .then(function(result){
             if(result.length === 0)
                 res.send(JSON.stringify({response: "user does not exists"}));
