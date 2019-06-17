@@ -3,7 +3,7 @@ var app = express();
 var cors = require('cors');
 var DButilsAzure = require('./DButils');
 var authManager = require('./AuthManager');
-var fields = { field: ["diners","Museums","Clubs","Shopping"]};
+var fields = { field: ["Historic","Museums","diners","Shopping"]};
 fs = require('fs');
 
 app.use(cors());
