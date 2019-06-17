@@ -181,6 +181,20 @@ app.post('/getUserFavoritePOI', function(req, res){
 });
 
 
+app.post('/getLastReviews', function(req, res){
+    var poiId = req.body.poiId;
+    DButilsAzure.execQuery( "SELECT top(2) userName,review,date "+
+        "FROM usersReviewOnPOI " +
+        "WHERE poiId = "+poiId+" order by date desc ;")
+        .then(function(result){
+            res.status(200).send(result);
+        })
+        .catch(function(err){
+            console.log(err);
+            res.status(500).send(err);
+        })
+});
+
 
 
 //CHECK!
@@ -403,18 +417,19 @@ app.post('/addRating', function(req, res){
 //CHECK!
 app.post('/addReview', function(req, res){
 
-    var fields = "userName,poiId,review,rank";
+    var fields = "userName,poiId,date,review,rank";
     var values = "";
-    for (var param in req.body){
-        values+="'"+req.body[param]+"', ";
+    var x = ["userName","poiId","date","review","rank"];
+    for(let i=0 ;i < x.length;i++){
+        values+= req.body[x[i]]===undefined ? "NULL, " : "'"+req.body[x[i]]+"', ";
     }
-    values += "null";
+   values = values.substring(0,values.length-2);
     var sql = "SELECT * FROM usersReviewOnPOI WHERE userName='"+req.body['userName']+"' and poiId="+req.body['poiId']+";"
     DButilsAzure.execQuery(sql)
         .then(function(result){
             if(result.length === 0){
                 sql = "INSERT INTO usersReviewOnPOI ("+fields+") VALUES ("+values+");"
-                DButilsAzure.execQuery(sql)
+                 DButilsAzure.execQuery(sql)
                     .then(function (result) {
                         res.status(200).send("success")
                     })

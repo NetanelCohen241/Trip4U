@@ -10,7 +10,7 @@ exports.generateToken = function(payload, options){
 };
 
 exports.validate = function(req, res, next){
-    const token = req.header("x-auth-token");
+    const token = req.header("authrization");
     // no token
     if (!token) res.status(401).send("Access denied. No token provided.");
     // verify token
