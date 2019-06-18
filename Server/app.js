@@ -3,7 +3,7 @@ var app = express();
 var cors = require('cors');
 var DButilsAzure = require('./DButils');
 var authManager = require('./AuthManager');
-var fields = { field: ["Historic","Museums","diners","Shopping"]};
+var fields = { field: ["Historic","Museums","Restaurants","Shopping"]};
 fs = require('fs');
 
 app.use(cors());
@@ -11,9 +11,6 @@ var port = 3000;
 app.listen(port, function () {
     console.log('Server  listening on port :  ' + port);
 });
-
-
-
 
 
 var bodyParser = require('body-parser');
@@ -357,7 +354,8 @@ app.post('/incrementPOIViewsNumber', function(req, res){
     var sql = "UPDATE pointsOfInterest SET views = views +1 WHERE poiId = "+req.body['poiId'];
     DButilsAzure.execQuery(sql)
         .then(function(result){
-            res.status(200).send(result);
+            res.status(200).send();
+            return;
         })
         .catch(function(err){
             console.log(err);
@@ -367,7 +365,7 @@ app.post('/incrementPOIViewsNumber', function(req, res){
 
 //CHECK!
 
-async function addRating(userName,poiId,rating){
+async function addRating(userName,poiId,date,rating){
     try {
         let qry = "SELECT *" + "FROM usersReviewOnPOI " + "WHERE userName =  '" + userName +  "' and poiId = '" + poiId + "';";
         let numberOfRecords = await DButilsAzure.execQuery(qry);
@@ -376,7 +374,7 @@ async function addRating(userName,poiId,rating){
             qry = "UPDATE  usersReviewOnPOI " + "SET rank = " + rating + " " + "WHERE userName =  '" + userName + "' and poiId = '" + poiId + "';";
             await DButilsAzure.execQuery(qry);
         } else {
-            qry = "INSERT INTO usersReviewOnPOI (userName, poiId, review,rank) " + "VALUES ('" + userName + "'," + poiId + ", NULL ," + rating + ");";
+            qry = "INSERT INTO usersReviewOnPOI (userName, poiId,date, review,rank) " + "VALUES ('" + userName + "'," + poiId + ",'"+date+"', NULL ," + rating + ");";
             await DButilsAzure.execQuery(qry);
         }
          qry = "SELECT AVG(cast (rank as Float)) as avg " +
@@ -399,7 +397,8 @@ app.post('/addRating', function(req, res){
     let userName = req.body.userName;
     let poiId = req.body.poiId;
     let rating = req.body.rank;
-    let response = addRating(userName, poiId, rating);
+    let date = req.body.date;
+    let response = addRating(userName, poiId,date, rating);
     response.then(function (response) {
 
         if(response)
