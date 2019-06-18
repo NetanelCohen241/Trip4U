@@ -166,7 +166,7 @@ app.post('/getUserFavoritePOI', function(req, res){
                                  "WHERE m.poiId = poi.poiId")
    .then(function(result){
        if(result.length === 0 ){
-           res.status(200).send("User dose not exist or dont have a Favorite list");
+           res.status(200).send({response:"User does not exist or dont have a Favorite list"});
        }else {
            res.status(200).send(result);
        }
