@@ -159,8 +159,8 @@ app.post('/register', function(req, res){
 //CHECK!!
 app.post('/getUserFavoritePOI', function(req, res){
     var userName = req.body.userName;
-    DButilsAzure.execQuery( "SELECT m.poiId,poi.name,poi.field,poi.description,poi.rank,poi.views,poi.imageUrl "+
-                                 "FROM (SELECT poiId "+
+    DButilsAzure.execQuery( "SELECT m.timeStamp,m.poiId,poi.name,poi.field,poi.description,poi.rank,poi.views,poi.imageUrl "+
+                                 "FROM (SELECT timeStamp, poiId "+
                                  "FROM usersFavoritePOI "+
                                  "WHERE userName = '"+userName+"') as m, pointsOfInterest as poi "+
                                  "WHERE m.poiId = poi.poiId")
@@ -461,12 +461,12 @@ app.post('/addReview', function(req, res){
 
 //CHECK!
 app.get('/getPopularPOIbyRating', function(req, res){
-    var sql = "SELECT * FROM pointsOfInterest WHERE rank>="+req.body['rank'];
+    var sql = "SELECT * FROM pointsOfInterest WHERE rank>="+req.query['rank'];
     DButilsAzure.execQuery(sql)
         .then(function(result){
             var ans = []
             var numOfRecords = result.length;
-            for (var i = 0; i < Math.min(req.body['amount'],numOfRecords); i++) {
+            for (var i = 0; i < Math.min(req.query['amount'],numOfRecords); i++) {
                 var rnd = Math.floor(Math.random() * numOfRecords);
                 if(ans.includes(result[rnd]))
                     i--;
