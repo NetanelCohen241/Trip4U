@@ -160,7 +160,7 @@ app.post('/register', function(req, res){
 app.post('/getUserFavoritePOI', function(req, res){
     var userName = req.body.userName;
     DButilsAzure.execQuery( "SELECT m.timeStamp,m.poiIndex,m.poiId,poi.name,poi.field,poi.description,poi.rank,poi.views,poi.imageUrl "+
-                                 "FROM (SELECT timeStamp, poiId "+
+                                 "FROM (SELECT timeStamp, poiId, poiIndex "+
                                  "FROM usersFavoritePOI "+
                                  "WHERE userName = '"+userName+"') as m, pointsOfInterest as poi "+
                                  "WHERE m.poiId = poi.poiId")
