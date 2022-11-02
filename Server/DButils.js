@@ -8,12 +8,6 @@ var poolConfig = {
     log: true
 };
 
-var connectionConfig = {
-    userName: 'NetaDani',
-    password: 'DaniNeta$',
-    server: 'netananiel.database.windows.net',
-    options: { encrypt: true, database: 'poi' }
-};
 
 //create the pool
 var pool = new ConnectionPool(poolConfig, connectionConfig)
